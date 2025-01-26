@@ -1,25 +1,31 @@
 "use server";
 
 import { db } from "@/server/db";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function createUser() {
   const user = await currentUser(); //Get current User info from Clerk
   if (!user) throw new Error("Clerk User not found!");
 
-  const userId = user.id;
-  const emailAddress =
-    user.emailAddresses[0]?.emailAddress ?? "no-email@domain.com";
-  const firstName = user.firstName || "Unknown";
-  const lastName = user.lastName || "Unknown";
-  const imageUrl = user.imageUrl || "";
-
   // Save the user data in your database
   await db.user
     .upsert({
-      where: { id: userId },
-      update: { emailAddress, firstName, lastName, imageUrl },
-      create: { id: userId, emailAddress, firstName, lastName, imageUrl },
+      where: { id: user.id },
+      update: {
+        emailAddress:
+          user.emailAddresses[0]?.emailAddress ?? "no-email@domain.com",
+        firstName: user.firstName || "Unknown",
+        lastName: user.lastName || "Unknown",
+        imageUrl: user.imageUrl || "",
+      },
+      create: {
+        id: user.id,
+        emailAddress:
+          user.emailAddresses[0]?.emailAddress ?? "no-email@domain.com",
+        firstName: user.firstName || "Unknown",
+        lastName: user.lastName || "Unknown",
+        imageUrl: user.imageUrl || "",
+      },
     })
     .catch((err) => console.log(err));
 }
